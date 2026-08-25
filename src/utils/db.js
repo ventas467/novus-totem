@@ -3,7 +3,7 @@ import Dexie from 'dexie';
 export const db = new Dexie('NovusStandDB');
 
 db.version(1).stores({
-  leads: '++id, name, email, interest, score, date',
+  leads: '++id, name, email, interest, score, date, leadId',
   questions: '++id, text, options, correct, category'
 });
 
@@ -40,20 +40,84 @@ export const INITIAL_QUESTIONS = [
   }
 ];
 
-// Semilla de preguntas iniciales si la base de datos está vacía
+// Solicitar al navegador que la base de datos sea PERSISTENTE (sin borrado automático por almacenamiento bajo)
+export const requestPersistentStorage = async () => {
+  if (navigator.storage && navigator.storage.persist) {
+    try {
+      const isPersisted = await navigator.storage.persist();
+      console.log(`IndexedDB almacenamiento persistente garantizado: ${isPersisted}`);
+      return isPersisted;
+    } catch (e) {
+      console.warn("No se pudo solicitar almacenamiento persistente:", e);
+    }
+  }
+  return false;
+};
+
+// Guardar copia de respaldo en LocalStorage para máxima seguridad
+export const syncLocalStorageBackup = async () => {
+  try {
+    const leads = await db.leads.toArray();
+    const questions = await db.questions.toArray();
+    localStorage.setItem('NOVUS_BACKUP_LEADS', JSON.stringify(leads));
+    localStorage.setItem('NOVUS_BACKUP_QUESTIONS', JSON.stringify(questions));
+  } catch (e) {
+    console.warn("Error al sincronizar respaldo LocalStorage:", e);
+  }
+};
+
+// Restaurar desde LocalStorage si IndexedDB por alguna razón estuviera vacía
+export const restoreFromLocalStorageBackup = async () => {
+  try {
+    const leadsBackup = localStorage.getItem('NOVUS_BACKUP_LEADS');
+    const questionsBackup = localStorage.getItem('NOVUS_BACKUP_QUESTIONS');
+
+    const leadsCount = await db.leads.count();
+    if (leadsCount === 0 && leadsBackup) {
+      const parsedLeads = JSON.parse(leadsBackup);
+      if (Array.isArray(parsedLeads) && parsedLeads.length > 0) {
+        await db.leads.bulkAdd(parsedLeads);
+        console.log("Leads restaurados exitosamente desde el respaldo LocalStorage.");
+      }
+    }
+
+    const questionsCount = await db.questions.count();
+    if (questionsCount === 0 && questionsBackup) {
+      const parsedQuestions = JSON.parse(questionsBackup);
+      if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+        await db.questions.bulkAdd(parsedQuestions);
+      }
+    }
+  } catch (e) {
+    console.warn("Error al restaurar respaldo:", e);
+  }
+};
+
+// Inicialización completa de la base de datos
 export const initDB = async () => {
   try {
+    // 1. Garantizar persistencia en el navegador
+    await requestPersistentStorage();
+
+    // 2. Intentar restaurar respaldo secundario si la DB fue reseteada
+    await restoreFromLocalStorageBackup();
+
+    // 3. Semilla de preguntas iniciales si está vacía
     const count = await db.questions.count();
     if (count === 0) {
       await db.questions.bulkAdd(INITIAL_QUESTIONS);
-      console.log("Base de datos de preguntas Novus inicializada correctamente.");
+      console.log("Preguntas iniciales creadas en IndexedDB.");
     }
+
+    // 4. Actualizar espejo de respaldo
+    await syncLocalStorageBackup();
   } catch (err) {
-    console.error("Error al inicializar IndexedDB Dexie:", err);
+    console.error("Error inicializando IndexedDB:", err);
   }
 };
 
 export const resetQuestionsToDefault = async () => {
   await db.questions.clear();
   await db.questions.bulkAdd(INITIAL_QUESTIONS);
+  await syncLocalStorageBackup();
 };

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { db, resetQuestionsToDefault } from '../utils/db';
+import { db, resetQuestionsToDefault, syncLocalStorageBackup } from '../utils/db';
 import { exportLeadsToExcel } from '../utils/exporter';
 import { playSound } from '../utils/audio';
-import { Download, Trash2, Plus, Edit2, ArrowLeft, RefreshCw, Database, HelpCircle, Users, CheckCircle } from 'lucide-react';
+import { Download, Trash2, Plus, Edit2, ArrowLeft, RefreshCw, Database, HelpCircle, Users, Save } from 'lucide-react';
 
 export default function Admin({ onBack }) {
   const [activeTab, setActiveTab] = useState('leads'); // 'leads' | 'questions'
@@ -11,7 +11,7 @@ export default function Admin({ onBack }) {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estado Formulario Pregunta (Crear / Editar)
+  // Estado Formulario Pregunta
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [qText, setQText] = useState('');
   const [qOpt0, setQOpt0] = useState('');
@@ -31,8 +31,9 @@ export default function Admin({ onBack }) {
     try {
       const l = await db.leads.toArray();
       const q = await db.questions.toArray();
-      setLeads(l.reverse()); // Más recientes primero
+      setLeads(l.reverse());
       setQuestions(q);
+      await syncLocalStorageBackup();
     } catch (e) {
       console.error("Error al cargar datos de admin:", e);
     } finally {
@@ -45,10 +46,29 @@ export default function Admin({ onBack }) {
     exportLeadsToExcel(leads);
   };
 
+  const handleDownloadJsonBackup = () => {
+    playSound('click');
+    const backupData = {
+      timestamp: new Date().toISOString(),
+      leadsCount: leads.length,
+      leads: leads,
+      questions: questions
+    };
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NOVUS_Backup_DB_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleClearLeads = async () => {
     if (confirm("⚠️ ¿Deseas borrar TODOS los registros de visitantes (leads) de la base de datos local?\nEsta acción no se puede deshacer.")) {
       playSound('error');
       await db.leads.clear();
+      await syncLocalStorageBackup();
       loadData();
     }
   };
@@ -61,7 +81,6 @@ export default function Admin({ onBack }) {
     }
   };
 
-  // Guardar Pregunta (Crear o Editar)
   const handleSaveQuestion = async (e) => {
     e.preventDefault();
     if (!qText.trim() || !qOpt0.trim() || !qOpt1.trim() || !qOpt2.trim() || !qOpt3.trim()) {
@@ -83,6 +102,7 @@ export default function Admin({ onBack }) {
     }
 
     playSound('click');
+    await syncLocalStorageBackup();
     closeQModal();
     loadData();
   };
@@ -91,6 +111,7 @@ export default function Admin({ onBack }) {
     if (confirm("¿Eliminar esta pregunta de la trivia?")) {
       playSound('error');
       await db.questions.delete(id);
+      await syncLocalStorageBackup();
       loadData();
     }
   };
@@ -138,14 +159,14 @@ export default function Admin({ onBack }) {
             <h1 className="text-xl md:text-2xl font-bold font-pixel text-novus-gold uppercase">
               PANEL DE CONTROL • STAND NOVUS
             </h1>
-            <p className="text-xs text-slate-400">Gestión local de Leads e Inventario de Preguntas Trivia</p>
+            <p className="text-xs text-slate-400">Base de datos local IndexedDB + Respaldo automático</p>
           </div>
         </div>
         <button
           onClick={() => { playSound('click'); onBack(); }}
           className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-3 border-2 border-white shadow-pixel text-xs rounded active:scale-95"
         >
-          <ArrowLeft className="w-4 h-4" /> SALIR Y VOLVER AL MODO JUEGO
+          <ArrowLeft className="w-4 h-4" /> SALIR AL JUEGO
         </button>
       </div>
 
@@ -178,14 +199,20 @@ export default function Admin({ onBack }) {
         <div className="flex-1 flex flex-col min-h-0 bg-slate-800 border-2 border-slate-700 p-4">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <div className="text-xs text-slate-300">
-              Registros capturados offline en IndexedDB local:
+              Persistencia en disco (IndexedDB + Respaldo LocalStorage):
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleExportExcel}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 border-2 border-white shadow-pixel text-xs active:scale-95"
               >
-                <Download className="w-4 h-4" /> EXPORTAR A EXCEL (.XLSX)
+                <Download className="w-4 h-4" /> EXPORTAR EXCEL (.XLSX)
+              </button>
+              <button
+                onClick={handleDownloadJsonBackup}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 border-2 border-white shadow-pixel text-xs active:scale-95"
+              >
+                <Save className="w-4 h-4" /> RESPALDO JSON
               </button>
               <button
                 onClick={handleClearLeads}
@@ -247,7 +274,7 @@ export default function Admin({ onBack }) {
         <div className="flex-1 flex flex-col min-h-0 bg-slate-800 border-2 border-slate-700 p-4">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <div className="text-xs text-slate-300">
-              Preguntas cargadas dinámicamente en el juego (3 elegidas al azar por partida):
+              Preguntas cargadas dinámicamente en la trivia:
             </div>
             <div className="flex gap-3">
               <button
@@ -265,7 +292,6 @@ export default function Admin({ onBack }) {
             </div>
           </div>
 
-          {/* Lista de Preguntas */}
           <div className="flex-1 overflow-auto space-y-3">
             {questions.map((q, idx) => (
               <div key={q.id || idx} className="bg-slate-900 p-4 border-2 border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -311,7 +337,7 @@ export default function Admin({ onBack }) {
         </div>
       )}
 
-      {/* Modal Formulario Pregunta (Crear / Editar) */}
+      {/* Modal Formulario Pregunta */}
       {showQModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <motion.div

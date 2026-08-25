@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db, initDB } from './utils/db';
+import { db, initDB, syncLocalStorageBackup } from './utils/db';
 import Welcome from './components/Welcome';
 import LeadForm from './components/LeadForm';
 import Game from './components/Game';
@@ -9,37 +9,62 @@ import Admin from './components/Admin';
 import SecretAdminModal from './components/SecretAdminModal';
 
 export default function App() {
-  // Estados de Vista: 'welcome' | 'form' | 'game' | 'end' | 'admin'
+  // Vistas: 'welcome' | 'form' | 'game' | 'end' | 'admin'
   const [view, setView] = useState('welcome');
   const [currentLead, setCurrentLead] = useState(null);
+  const [currentLeadId, setCurrentLeadId] = useState(null);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(3);
   const [showAdminModal, setShowAdminModal] = useState(false);
 
-  // Inicializar base de datos IndexedDB al arrancar
+  // Inicializar base de datos IndexedDB y respaldos al arrancar la app
   useEffect(() => {
     initDB();
   }, []);
 
-  // Iniciar Flujo del Jugador (Desde Pantalla de Bienvenida)
+  // Iniciar Flujo
   const handleStart = () => {
     setView('form');
   };
 
-  // Guardar datos del Formulario de Captura
-  const handleFormSubmit = (leadData) => {
+  // Guardar datos del Formulario INMEDIATAMENTE en IndexedDB y respaldar
+  const handleFormSubmit = async (leadData) => {
     setCurrentLead(leadData);
+    
+    try {
+      // Guardar el registro inmediatamente en IndexedDB (aún sin puntaje final)
+      const newId = await db.leads.add({
+        name: leadData.name,
+        email: leadData.email,
+        interest: leadData.interest,
+        score: 0,
+        totalQuestions: 3,
+        date: new Date().toISOString()
+      });
+
+      setCurrentLeadId(newId);
+      await syncLocalStorageBackup();
+    } catch (err) {
+      console.error("Error guardando registro inicial en IndexedDB:", err);
+    }
+
     setView('game');
   };
 
-  // Finalizar Juego de Trivia
+  // Actualizar puntaje del juego al finalizar la trivia
   const handleGameEnd = async (finalScore, numQuestions = 3) => {
     setScore(finalScore);
     setTotalQuestions(numQuestions);
 
-    // Guardar registro de lead y puntaje en IndexedDB (Dexie)
     try {
-      if (currentLead) {
+      if (currentLeadId) {
+        // Actualizar el registro existente con el puntaje obtenido
+        await db.leads.update(currentLeadId, {
+          score: finalScore,
+          totalQuestions: numQuestions
+        });
+      } else if (currentLead) {
+        // Fallback si no había ID previo
         await db.leads.add({
           name: currentLead.name,
           email: currentLead.email,
@@ -49,21 +74,24 @@ export default function App() {
           date: new Date().toISOString()
         });
       }
+
+      // Sincronizar espejo de seguridad en LocalStorage
+      await syncLocalStorageBackup();
     } catch (err) {
-      console.error("Error guardando lead en IndexedDB:", err);
+      console.error("Error actualizando puntaje en IndexedDB:", err);
     }
 
     setView('end');
   };
 
-  // Reset Completo para el Siguiente Jugador
+  // Reset de interfaz para el Siguiente Jugador (NO borra la base de datos)
   const handleFullReset = () => {
     setCurrentLead(null);
+    setCurrentLeadId(null);
     setScore(0);
     setView('welcome');
   };
 
-  // Abrir Modal de PIN Admin
   const handleOpenAdminPinModal = () => {
     setShowAdminModal(true);
   };
@@ -118,7 +146,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Modal de PIN de Seguridad para Administrador */}
+      {/* Modal de PIN para Administrador */}
       {showAdminModal && (
         <SecretAdminModal
           onSuccess={handleAdminSuccess}
