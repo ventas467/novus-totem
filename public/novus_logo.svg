@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 180" width="100%" height="100%">
+  <defs>
+    <!-- Filtro de sombra pixelada retro 8-bits -->
+    <filter id="pixelShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="6" dy="6" stdDeviation="0" flood-color="#000000" flood-opacity="0.9" />
+    </filter>
+    <linearGradient id="novusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FACC15" />
+    </linearGradient>
+    <linearGradient id="swooshGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38A3D1" />
+      <stop offset="100%" stop-color="#FACC15" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo de la tarjeta del logo Arcade -->
+  <rect x="10" y="10" width="580" height="160" fill="#0F3249" stroke="#FACC15" stroke-width="6" filter="url(#pixelShadow)" rx="4" />
+  <rect x="18" y="18" width="564" height="144" fill="none" stroke="#1C5274" stroke-width="4" />
+
+  <!-- Icono de Hoja / Arco de Salud Avícola Novus -->
+  <g transform="translate(45, 38) scale(1.1)">
+    <!-- Curva de nutrición -->
+    <path d="M 10,60 C 20,10 60,10 70,60 C 60,35 30,35 10,60 Z" fill="url(#swooshGrad)" />
+    <!-- Círculo de la N -->
+    <circle cx="40" cy="22" r="8" fill="#FACC15" />
+  </g>
+
+  <!-- Texto Tipográfico NOVUS -->
+  <g font-family="'Press Start 2P', monospace, sans-serif" font-weight="900" filter="url(#pixelShadow)">
+    <text x="135" y="95" font-size="64" fill="url(#novusGradient)" letter-spacing="4">NOVUS</text>
+  </g>
+
+  <!-- Tagline Corporativo -->
+  <g font-family="'Press Start 2P', monospace, sans-serif" font-size="12" fill="#FACC15" letter-spacing="2">
+    <text x="140" y="132">SOLUCIONES PARA SALUD Y PRODUCCIÓN</text>
+  </g>
+
+  <!-- Adornos Pixel de Esquina -->
+  <rect x="24" y="24" width="8" height="8" fill="#FACC15" />
+  <rect x="568" y="24" width="8" height="8" fill="#FACC15" />
+  <rect x="24" y="148" width="8" height="8" fill="#FACC15" />
+  <rect x="568" y="148" width="8" height="8" fill="#FACC15" />
+</svg>
