@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import PixelChicken from './PixelChicken';
+import NovusPixelLogo from './NovusPixelLogo';
 import { playSound, toggleMute, getMuteState } from '../utils/audio';
 import { Volume2, VolumeX, ShieldAlert, Sparkles } from 'lucide-react';
 
 export default function Welcome({ onStart, onOpenAdmin }) {
   const [muted, setMuted] = useState(getMuteState());
-  const [logoError, setLogoError] = useState(false);
 
   const handleAudioToggle = (e) => {
     e.stopPropagation();
@@ -46,48 +46,20 @@ export default function Welcome({ onStart, onOpenAdmin }) {
         <span>{muted ? 'MUTED' : 'AUDIO ON'}</span>
       </button>
 
-      {/* Header & Logo Oficial NOVUS en Pantalla Principal */}
-      <div className="flex flex-col items-center space-y-3 mt-4 text-center z-10 w-full max-w-xl">
+      {/* Header & Logo Pixel Art Exacto de NOVUS */}
+      <div className="flex flex-col items-center space-y-3 mt-4 text-center z-10 w-full max-w-2xl">
         <motion.div
           animate={{ y: [-3, 3, -3] }}
           transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-          className="w-full flex flex-col items-center"
+          className="w-full bg-black/70 p-4 md:p-6 border-4 border-novus-gold shadow-pixel-lg rounded-md flex flex-col items-center"
         >
-          {/* Si se coloca novus_logo.png o novus_logo.svg en /public, se renderiza la imagen directa */}
-          {!logoError ? (
-            <div className="p-3 bg-black/50 border-4 border-novus-gold shadow-pixel-lg rounded-md flex flex-col items-center max-w-md w-full">
-              <img
-                src="/novus_logo.png"
-                onError={(e) => {
-                  // Fallback a SVG si PNG no está presente
-                  if (e.target.src.endsWith('/novus_logo.png')) {
-                    e.target.src = '/novus_logo.svg';
-                  } else {
-                    setLogoError(true);
-                  }
-                }}
-                alt="NOVUS - Soluciones para Salud y Producción Avícola"
-                className="max-h-24 md:max-h-28 w-auto object-contain drop-shadow-[0_4px_0_#000]"
-              />
-              <div className="text-[10px] md:text-xs text-novus-gold tracking-widest mt-2 uppercase font-mono border-t border-novus-light/40 pt-2 w-full">
-                Soluciones para Salud y Producción Avícola
-              </div>
-            </div>
-          ) : (
-            // Fallback tipográfico estilo retro 8-bits
-            <div className="bg-black/60 p-4 border-4 border-novus-gold shadow-pixel-lg rounded-sm w-full">
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-novus-gold text-2xl font-black">★</span>
-                <h1 className="text-3xl md:text-5xl font-extrabold tracking-wider text-white drop-shadow-[0_4px_0_#1C5274]">
-                  NOVUS
-                </h1>
-                <span className="text-novus-gold text-2xl font-black">★</span>
-              </div>
-              <div className="text-[10px] md:text-xs text-novus-gold tracking-widest mt-2 uppercase font-mono">
-                Soluciones para Salud y Producción Avícola
-              </div>
-            </div>
-          )}
+          {/* Logo 8-Bit Pixel-Perfect de NOVUS */}
+          <NovusPixelLogo color="#FFFFFF" />
+
+          {/* Tagline Corporativo Novus */}
+          <div className="text-[10px] md:text-xs text-novus-gold tracking-widest mt-3 uppercase font-mono border-t-2 border-novus-light/40 pt-3 w-full text-center font-bold">
+            SOLUCIONES PARA SALUD Y PRODUCCIÓN AVÍCOLA
+          </div>
         </motion.div>
 
         {/* Marquee Título del Juego */}
@@ -107,12 +79,12 @@ export default function Welcome({ onStart, onOpenAdmin }) {
           ☁️ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ☁️
         </motion.div>
 
-        {/* Círculo de Luz/Enfoque de Stand */}
+        {/* Círculo de Enfoque */}
         <div className="relative p-6 bg-novus-light/20 rounded-full border-4 border-dashed border-novus-gold/40 flex items-center justify-center">
           <PixelChicken state="celebrate" size="large" />
         </div>
 
-        {/* Banner de mensaje explicativo */}
+        {/* Banner Explicativo */}
         <div className="mt-3 px-6 py-2 bg-black/70 border-2 border-novus-light text-center text-[11px] text-slate-200 max-w-lg shadow-pixel">
           Demuestra tus conocimientos en nutrición, biquelados y salud intestinal. ¡Compite por el primer lugar!
         </div>
