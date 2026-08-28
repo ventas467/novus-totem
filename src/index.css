@@ -24,8 +24,24 @@
   to { transform: translateY(0); }
 }
 
+@keyframes float-clouds {
+  0% { transform: translate3d(-100px, 0, 0); }
+  100% { transform: translate3d(500px, 0, 0); }
+}
+
+@keyframes pulse-light {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
 .animate-slide-up {
-  animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: slide-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform;
+}
+
+.animate-clouds-fast {
+  animation: float-clouds 22s linear infinite;
+  will-change: transform;
 }
 
 :root {
@@ -34,12 +50,22 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  text-rendering: optimizeSpeed;
 }
 
-* {
+/* Forzar Aceleración por Hardware GPU (Mali-G31 MP2 / Firefox ARM) */
+*, *::before, *::after {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  box-sizing: border-box;
+}
+
+/* Optimización de Compositor GPU para la Orange Pi Zero 2W */
+.hardware-accel, .pixel-button, .scanlines, img, svg {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 body {
@@ -51,9 +77,10 @@ body {
   overscroll-behavior-y: contain;
   background-color: #0F3249;
   font-family: 'Press Start 2P', monospace, cursive;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Retro Scanline CRT Overlay */
+/* Overlay Scanlines Ultra-Ligero para GPU Mali-G31 sin Caída de FPS */
 .scanlines {
   position: relative;
 }
@@ -62,19 +89,77 @@ body {
   display: block;
   position: absolute;
   top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-  background-size: 100% 4px;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12),
+    rgba(0, 0, 0, 0.12) 2px,
+    transparent 2px,
+    transparent 4px
+  );
   z-index: 40;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.4;
+  transform: translateZ(0);
 }
 
-/* Scrollbar especial para el Aviso Legal */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #EAB308; border-radius: 2px; }
+/* Sombras Pixel de Bajo Costo en GPU (sin filtros blur pesados) */
+.pixel-border {
+  border: 4px solid #FFFFFF;
+  box-shadow: 4px 4px 0px #000000;
+}
 
-/* Scrollbar retro general para la app */
+.pixel-card {
+  border: 4px solid #1C5274;
+  background: #0F3249;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.pixel-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #000000;
+  box-shadow: 0 4px 0 #000000;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.pixel-button:active {
+  transform: translate3d(0, 3px, 0);
+  box-shadow: 0 1px 0 #000000;
+}
+
+.pixel-input {
+  background-color: #0B2233;
+  border: 4px solid #2A7BA0;
+  color: #FFFFFF;
+  padding: 1rem;
+  outline: none;
+}
+
+.pixel-input:focus {
+  border-color: #FACC15;
+}
+
+.shadow-pixel {
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.8);
+}
+
+.shadow-pixel-lg {
+  box-shadow: 5px 5px 0px 0px rgba(0, 0, 0, 0.9);
+}
+
+.shadow-pixel-gold {
+  box-shadow: 3px 3px 0px 0px #FACC15;
+}
+
+/* Scrollbars Ligeras */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #EAB308; }
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -83,5 +168,4 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: #2a7ba0;
-  border-radius: 4px;
 }
