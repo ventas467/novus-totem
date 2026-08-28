@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { db, resetQuestionsToDefault, syncLocalStorageBackup } from '../utils/db';
+import { db, resetQuestionsToDefault, sanitizeDatabaseFormConfigAndLeads, syncLocalStorageBackup } from '../utils/db';
 import { exportLeadsToExcel } from '../utils/exporter';
 import { playSound } from '../utils/audio';
-import { Download, Trash2, Plus, Edit2, ArrowLeft, RefreshCw, Database, HelpCircle, Users, Save } from 'lucide-react';
+import AdminFormManager from './AdminFormManager';
+import { Download, Trash2, Plus, Edit2, ArrowLeft, RefreshCw, Database, HelpCircle, Users, Save, Sliders, Sparkles } from 'lucide-react';
 
 export default function Admin({ onBack }) {
-  const [activeTab, setActiveTab] = useState('leads'); // 'leads' | 'questions'
+  const [activeTab, setActiveTab] = useState('leads'); // 'leads' | 'questions' | 'formConfig'
   const [leads, setLeads] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const [formFields, setFormFields] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estado Formulario Pregunta
+  // Modal Pregunta
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [qText, setQText] = useState('');
   const [qOpt0, setQOpt0] = useState('');
@@ -29,15 +31,29 @@ export default function Admin({ onBack }) {
   const loadData = async () => {
     setLoading(true);
     try {
+      // Auto sanitización previa para asegurar datos limpios
+      await sanitizeDatabaseFormConfigAndLeads();
       const l = await db.leads.toArray();
       const q = await db.questions.toArray();
+      const f = await db.formConfig.orderBy('order').toArray();
       setLeads(l.reverse());
       setQuestions(q);
+      setFormFields(f);
       await syncLocalStorageBackup();
     } catch (e) {
       console.error("Error al cargar datos de admin:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSanitizeDB = async () => {
+    playSound('click');
+    if (confirm("¿Desear estandarizar la base de datos y limpiar todos los campos antiguos mezclados?")) {
+      setLoading(true);
+      await sanitizeDatabaseFormConfigAndLeads();
+      await loadData();
+      alert("Base de datos sanitizada correctamente. Todos los campos están organizados.");
     }
   };
 
@@ -52,7 +68,8 @@ export default function Admin({ onBack }) {
       timestamp: new Date().toISOString(),
       leadsCount: leads.length,
       leads: leads,
-      questions: questions
+      questions: questions,
+      formConfig: formFields
     };
     const jsonStr = JSON.stringify(backupData, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -81,6 +98,7 @@ export default function Admin({ onBack }) {
     }
   };
 
+  // --- CRUD PREGUNTAS ---
   const handleSaveQuestion = async (e) => {
     e.preventDefault();
     if (!qText.trim() || !qOpt0.trim() || !qOpt1.trim() || !qOpt2.trim() || !qOpt3.trim()) {
@@ -144,6 +162,9 @@ export default function Admin({ onBack }) {
     setEditingQuestion(null);
   };
 
+  // Lista estricta y limpia de cabeceras activas oficiales
+  const OFFICIAL_HEADERS = ["Nombre Completo", "Empresa", "Correo Electrónico", "País", "Interés", "Privacidad"];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -159,22 +180,22 @@ export default function Admin({ onBack }) {
             <h1 className="text-xl md:text-2xl font-bold font-pixel text-novus-gold uppercase">
               PANEL DE CONTROL • STAND NOVUS
             </h1>
-            <p className="text-xs text-slate-400">Base de datos local IndexedDB + Respaldo automático</p>
+            <p className="text-xs text-slate-400">IndexedDB v5 + Campos de Formulario Estandarizados</p>
           </div>
         </div>
         <button
           onClick={() => { playSound('click'); onBack(); }}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-3 border-2 border-white shadow-pixel text-xs rounded active:scale-95"
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-3 border-2 border-white shadow-pixel text-xs rounded active:scale-95 font-pixel"
         >
           <ArrowLeft className="w-4 h-4" /> SALIR AL JUEGO
         </button>
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         <button
-          onClick={() => { setActiveTab('leads'); playSound('click'); }}
-          className={`flex items-center gap-2 px-6 py-3 border-2 text-xs font-bold transition-all ${
+          onClick={() => { setActiveTab('leads'); playSound('click'); loadData(); }}
+          className={`flex items-center gap-2 px-5 py-3 border-2 text-xs font-bold transition-all ${
             activeTab === 'leads'
               ? 'bg-novus text-white border-novus-gold shadow-pixel'
               : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
@@ -183,25 +204,41 @@ export default function Admin({ onBack }) {
           <Users className="w-4 h-4" /> LEADS REGISTRADOS ({leads.length})
         </button>
         <button
-          onClick={() => { setActiveTab('questions'); playSound('click'); }}
-          className={`flex items-center gap-2 px-6 py-3 border-2 text-xs font-bold transition-all ${
+          onClick={() => { setActiveTab('questions'); playSound('click'); loadData(); }}
+          className={`flex items-center gap-2 px-5 py-3 border-2 text-xs font-bold transition-all ${
             activeTab === 'questions'
               ? 'bg-novus text-white border-novus-gold shadow-pixel'
               : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
           }`}
         >
-          <HelpCircle className="w-4 h-4" /> GESTOR DE PREGUNTAS ({questions.length})
+          <HelpCircle className="w-4 h-4" /> PREGUNTAS ({questions.length})
+        </button>
+        <button
+          onClick={() => { setActiveTab('formConfig'); playSound('click'); loadData(); }}
+          className={`flex items-center gap-2 px-5 py-3 border-2 text-xs font-bold transition-all ${
+            activeTab === 'formConfig'
+              ? 'bg-novus text-white border-novus-gold shadow-pixel'
+              : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
+          }`}
+        >
+          <Sliders className="w-4 h-4" /> CONFIGURACIÓN FORMULARIO ({formFields.length})
         </button>
       </div>
 
-      {/* TAB 1: GESTIÓN DE LEADS */}
+      {/* TAB 1: LEADS REGISTRADOS CON CAMPOS ESTRICTOS */}
       {activeTab === 'leads' && (
         <div className="flex-1 flex flex-col min-h-0 bg-slate-800 border-2 border-slate-700 p-4">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <div className="text-xs text-slate-300">
-              Persistencia en disco (IndexedDB + Respaldo LocalStorage):
+              Registros estandarizados (6 campos activos oficiales):
             </div>
             <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleSanitizeDB}
+                className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 border-2 border-white shadow-pixel text-xs active:scale-95"
+              >
+                <Sparkles className="w-4 h-4" /> LIMPIAR CAMPOS DUP.
+              </button>
               <button
                 onClick={handleExportExcel}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 border-2 border-white shadow-pixel text-xs active:scale-95"
@@ -216,52 +253,56 @@ export default function Admin({ onBack }) {
               </button>
               <button
                 onClick={handleClearLeads}
-                className="flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-white font-bold px-4 py-2 border-2 border-white shadow-pixel text-xs active:scale-95"
+                className="flex items-center gap-2 bg-red-700 hover:bg-red-600 text-white font-bold px-4 py-2 border-2 border-white shadow-pixel text-xs active:scale-95"
               >
                 <Trash2 className="w-4 h-4" /> VACIAR BASE DE DATOS
               </button>
             </div>
           </div>
 
-          {/* Tabla de Leads */}
           <div className="flex-1 overflow-auto border-2 border-slate-900 bg-slate-950">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead className="sticky top-0 bg-novus text-novus-gold font-pixel text-[10px]">
+            <table className="w-full text-xs text-left border-collapse min-w-max">
+              <thead className="sticky top-0 bg-novus text-novus-gold font-pixel text-[10px] z-10 shadow-md">
                 <tr>
-                  <th className="p-3 border border-slate-700">ID</th>
-                  <th className="p-3 border border-slate-700">FECHA Y HORA</th>
-                  <th className="p-3 border border-slate-700">NOMBRE</th>
-                  <th className="p-3 border border-slate-700">EMAIL</th>
-                  <th className="p-3 border border-slate-700">INTERÉS</th>
-                  <th className="p-3 border border-slate-700 text-center">PUNTAJE</th>
+                  <th className="p-3 border border-slate-700 min-w-[70px]">ID</th>
+                  <th className="p-3 border border-slate-700 min-w-[170px] whitespace-nowrap">FECHA Y HORA</th>
+                  {OFFICIAL_HEADERS.map(h => (
+                    <th key={h} className="p-3 border border-slate-700 uppercase min-w-[150px] whitespace-nowrap">{h}</th>
+                  ))}
+                  <th className="p-3 border border-slate-700 text-center min-w-[100px] whitespace-nowrap">PUNTAJE</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-800 font-mono">
                 {leads.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-500">
+                    <td colSpan={OFFICIAL_HEADERS.length + 3} className="p-8 text-center text-slate-500 font-sans">
                       No hay registros guardados en la base de datos local.
                     </td>
                   </tr>
                 ) : (
-                  leads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-slate-900 transition-colors">
-                      <td className="p-3 border border-slate-800 text-slate-400">#{lead.id}</td>
-                      <td className="p-3 border border-slate-800 text-slate-300">
-                        {lead.date ? new Date(lead.date).toLocaleString('es-ES') : '-'}
-                      </td>
-                      <td className="p-3 border border-slate-800 font-bold text-white">{lead.name}</td>
-                      <td className="p-3 border border-slate-800 text-slate-300">{lead.email}</td>
-                      <td className="p-3 border border-slate-800">
-                        <span className="bg-novus-dark text-novus-gold px-2 py-1 text-[10px] rounded border border-novus-light">
-                          {lead.interest}
-                        </span>
-                      </td>
-                      <td className="p-3 border border-slate-800 text-center font-bold text-green-400">
-                        {lead.score !== undefined ? lead.score : 0}/3
-                      </td>
-                    </tr>
-                  ))
+                  leads.map((lead) => {
+                    const dataObj = lead.data || {};
+
+                    return (
+                      <tr key={lead.id} className="hover:bg-slate-900 transition-colors">
+                        <td className="p-3 border border-slate-800 text-slate-400 font-bold">#{lead.id}</td>
+                        <td className="p-3 border border-slate-800 text-slate-300 whitespace-nowrap">
+                          {lead.date ? new Date(lead.date).toLocaleString('es-ES') : '-'}
+                        </td>
+                        {OFFICIAL_HEADERS.map(h => {
+                          const val = dataObj[h];
+                          return (
+                            <td key={h} className="p-3 border border-slate-800 text-white whitespace-nowrap">
+                              {(val !== undefined && val !== null && String(val).trim() !== '') ? String(val) : '-'}
+                            </td>
+                          );
+                        })}
+                        <td className="p-3 border border-slate-800 text-center font-bold text-green-400 whitespace-nowrap">
+                          {lead.score !== undefined ? lead.score : 0}/3
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -269,7 +310,7 @@ export default function Admin({ onBack }) {
         </div>
       )}
 
-      {/* TAB 2: GESTOR DE PREGUNTAS */}
+      {/* TAB 2: PREGUNTAS TRIVIA */}
       {activeTab === 'questions' && (
         <div className="flex-1 flex flex-col min-h-0 bg-slate-800 border-2 border-slate-700 p-4">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -287,7 +328,7 @@ export default function Admin({ onBack }) {
                 onClick={handleResetQuestions}
                 className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 border border-slate-500 text-xs active:scale-95"
               >
-                <RefreshCw className="w-4 h-4" /> RESTAURAR POR DEFECTO
+                <RefreshCw className="w-4 h-4" /> RESTAURAR DEFECTO
               </button>
             </div>
           </div>
@@ -316,18 +357,10 @@ export default function Admin({ onBack }) {
                   </div>
                 </div>
                 <div className="flex gap-2 self-end md:self-center">
-                  <button
-                    onClick={() => openQModal(q)}
-                    className="p-2 bg-amber-600 hover:bg-amber-500 text-white text-xs border border-white"
-                    title="Editar"
-                  >
+                  <button onClick={() => openQModal(q)} className="p-2 bg-amber-600 hover:bg-amber-500 text-white text-xs border border-white">
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => handleDeleteQuestion(q.id)}
-                    className="p-2 bg-red-600 hover:bg-red-500 text-white text-xs border border-white"
-                    title="Eliminar"
-                  >
+                  <button onClick={() => handleDeleteQuestion(q.id)} className="p-2 bg-red-600 hover:bg-red-500 text-white text-xs border border-white">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -337,97 +370,46 @@ export default function Admin({ onBack }) {
         </div>
       )}
 
-      {/* Modal Formulario Pregunta */}
+      {/* TAB 3: CONFIGURACIÓN FORMULARIO DINÁMICO */}
+      {activeTab === 'formConfig' && (
+        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+          <AdminFormManager />
+        </div>
+      )}
+
+      {/* Modal Pregunta */}
       {showQModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-novus border-4 border-white p-6 w-full max-w-xl shadow-pixel-lg space-y-4 font-mono text-xs"
-          >
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-novus border-4 border-white p-6 w-full max-w-xl shadow-pixel-lg space-y-4 font-mono text-xs">
             <h3 className="text-base font-bold text-novus-gold font-pixel uppercase">
               {editingQuestion ? 'EDITAR PREGUNTA' : 'CREAR NUEVA PREGUNTA TRIVIA'}
             </h3>
-
             <form onSubmit={handleSaveQuestion} className="space-y-4">
               <div>
                 <label className="block text-slate-200 mb-1">PREGUNTA (TEXTO):</label>
-                <input
-                  type="text"
-                  value={qText}
-                  onChange={(e) => setQText(e.target.value)}
-                  placeholder="¿Cuál es el beneficio de...?"
-                  className="w-full p-3 bg-slate-900 border-2 border-novus-light text-white text-xs"
-                  required
-                />
+                <input type="text" value={qText} onChange={(e) => setQText(e.target.value)} className="w-full p-3 bg-slate-900 border-2 border-novus-light text-white text-xs" required />
               </div>
-
               <div className="space-y-2">
                 <label className="block text-slate-200">OPCIONES DE RESPUESTA:</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={qOpt0}
-                    onChange={(e) => setQOpt0(e.target.value)}
-                    placeholder="Opción A"
-                    className="p-2 bg-slate-900 border border-slate-700 text-white"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={qOpt1}
-                    onChange={(e) => setQOpt1(e.target.value)}
-                    placeholder="Opción B"
-                    className="p-2 bg-slate-900 border border-slate-700 text-white"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={qOpt2}
-                    onChange={(e) => setQOpt2(e.target.value)}
-                    placeholder="Opción C"
-                    className="p-2 bg-slate-900 border border-slate-700 text-white"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={qOpt3}
-                    onChange={(e) => setQOpt3(e.target.value)}
-                    placeholder="Opción D"
-                    className="p-2 bg-slate-900 border border-slate-700 text-white"
-                    required
-                  />
+                  <input type="text" value={qOpt0} onChange={(e) => setQOpt0(e.target.value)} placeholder="Opción A" className="p-2 bg-slate-900 border border-slate-700 text-white" required />
+                  <input type="text" value={qOpt1} onChange={(e) => setQOpt1(e.target.value)} placeholder="Opción B" className="p-2 bg-slate-900 border border-slate-700 text-white" required />
+                  <input type="text" value={qOpt2} onChange={(e) => setQOpt2(e.target.value)} placeholder="Opción C" className="p-2 bg-slate-900 border border-slate-700 text-white" required />
+                  <input type="text" value={qOpt3} onChange={(e) => setQOpt3(e.target.value)} placeholder="Opción D" className="p-2 bg-slate-900 border border-slate-700 text-white" required />
                 </div>
               </div>
-
               <div>
                 <label className="block text-slate-200 mb-1">ÍNDICE DE RESPUESTA CORRECTA:</label>
-                <select
-                  value={qCorrect}
-                  onChange={(e) => setQCorrect(e.target.value)}
-                  className="w-full p-3 bg-slate-900 border-2 border-novus-light text-white text-xs"
-                >
+                <select value={qCorrect} onChange={(e) => setQCorrect(e.target.value)} className="w-full p-3 bg-slate-900 border-2 border-novus-light text-white text-xs">
                   <option value={0}>Opción A</option>
                   <option value={1}>Opción B</option>
                   <option value={2}>Opción C</option>
                   <option value={3}>Opción D</option>
                 </select>
               </div>
-
               <div className="flex justify-end gap-3 pt-4 border-t border-novus-light">
-                <button
-                  type="button"
-                  onClick={closeQModal}
-                  className="px-4 py-2 bg-slate-700 text-white font-bold border border-slate-500"
-                >
-                  CANCELAR
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-green-600 text-white font-bold border-2 border-white shadow-pixel"
-                >
-                  GUARDAR PREGUNTA
-                </button>
+                <button type="button" onClick={closeQModal} className="px-4 py-2 bg-slate-700 text-white font-bold border border-slate-500">CANCELAR</button>
+                <button type="submit" className="px-6 py-2 bg-green-600 text-white font-bold border-2 border-white shadow-pixel">GUARDAR PREGUNTA</button>
               </div>
             </form>
           </motion.div>

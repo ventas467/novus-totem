@@ -2,45 +2,57 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('NovusStandDB');
 
-db.version(1).stores({
-  leads: '++id, name, email, interest, score, date, leadId',
-  questions: '++id, text, options, correct, category'
+db.version(5).stores({
+  leads: '++id, data, score, totalQuestions, date',
+  questions: '++id, text, options, correct, category',
+  formConfig: '++id, label, type, required, options, order'
 });
 
-export const INITIAL_QUESTIONS = [
+export const OFFICIAL_QUESTIONS = [
   {
-    text: "¿Qué solución de oligoelementos biquelados NOVUS optimiza la absorción mineral y la calidad del cascarón?",
-    options: ["MINTREX®", "Agua destilada", "Maíz molido", "Sal común"],
-    correct: 0,
-    category: "Calidad de Cascarón"
+    text: "¿Cuál es uno de los principales beneficios de la proteasa CIBENZA® DP100 Aditivo Enzimático, en las dietas de aves?",
+    options: [
+      "Incrementar el consumo de alimento",
+      "Sustituir las fuentes de proteína de la dieta",
+      "Disminuir inhibidores de tripsina y mejorar la digestibilidad de nutrientes",
+      "Aumentar la concentración de minerales en el alimento"
+    ],
+    correct: 2,
+    category: "Factores antinutricionales / Enzimas"
   },
   {
-    text: "¿En qué área clave se enfoca NOVUS para maximizar la producción avícola sostenible?",
-    options: ["Diseño de galpones", "Salud Intestinal y Nutrición", "Maquinaria pesada", "Empaques de cartón"],
+    text: "¿Qué solución de minerales bis-quelados de NOVUS está diseñada para favorecer una utilización eficiente de los minerales?",
+    options: [
+      "MINTREX® Oligoelementos Bis-Quelados",
+      "AVIMATRIX® Aditivo Eubiótico",
+      "CIBENZA® DP100 Aditivo Enzimático",
+      "NEXT ENHANCE® Solución para Piensos"
+    ],
+    correct: 0,
+    category: "Nutrición Mineral"
+  },
+  {
+    text: "¿Cuál es el principal beneficio de NEXT ENHANCE® Solución para Piensos en la nutrición de aves?",
+    options: [
+      "Mejorar la pigmentación de la piel y plumas",
+      "Apoyar la salud intestinal promoviendo la mejora de la microbiota intestinal",
+      "Incrementar el contenido de proteína del alimento",
+      "Sustituir los minerales en la dieta"
+    ],
     correct: 1,
     category: "Salud Intestinal"
-  },
-  {
-    text: "¿Cuál es el principal beneficio de las enzimas digestivas (ej. CIBENZA®) en las dietas de aves?",
-    options: ["Dar color a las plumas", "Mejorar la digestibilidad de nutrientes y la conversión alimenticia", "Aumentar el tamaño del saco", "Cambiar el aroma del alimento"],
-    correct: 1,
-    category: "Nutrición/Enzimas"
-  },
-  {
-    text: "¿Qué impacto tienen los eubióticos NOVUS en la microflora intestinal del pollo de engorde?",
-    options: ["Inhiben patógenos y refuerzan la barrera intestinal", "Ningún impacto", "Reducen la ingesta de agua", "Aumentan la humedad de la cama"],
-    correct: 0,
-    category: "Salud Intestinal"
-  },
-  {
-    text: "¿Por qué MINTREX® ofrece mayor biodisponibilidad que los minerales inorgánicos?",
-    options: ["Por su unión covalente a dos moléculas de HMTBa", "Por su color brillante", "Por ser soluble en aceite", "Por su origen sintético simple"],
-    correct: 0,
-    category: "Nutrición/Enzimas"
   }
 ];
 
-// Solicitar al navegador que la base de datos sea PERSISTENTE (sin borrado automático por almacenamiento bajo)
+export const OFFICIAL_ACTIVE_FORM_CONFIG = [
+  { order: 1, label: "Nombre Completo", type: "text", required: true, options: "" },
+  { order: 2, label: "Empresa", type: "text", required: true, options: "" },
+  { order: 3, label: "Correo Electrónico", type: "email", required: true, options: "" },
+  { order: 4, label: "País", type: "text", required: true, options: "" },
+  { order: 5, label: "Interés Principal", type: "select", required: true, options: "Nutrición Mineral,Factores antinutricionales / Enzimas,Salud Intestinal,Otra área avícola" },
+  { order: 6, label: "Privacidad", type: "legal", required: true, options: "" }
+];
+
 export const requestPersistentStorage = async () => {
   if (navigator.storage && navigator.storage.persist) {
     try {
@@ -54,70 +66,77 @@ export const requestPersistentStorage = async () => {
   return false;
 };
 
-// Guardar copia de respaldo en LocalStorage para máxima seguridad
 export const syncLocalStorageBackup = async () => {
   try {
     const leads = await db.leads.toArray();
     const questions = await db.questions.toArray();
+    const formConfig = await db.formConfig.toArray();
     localStorage.setItem('NOVUS_BACKUP_LEADS', JSON.stringify(leads));
     localStorage.setItem('NOVUS_BACKUP_QUESTIONS', JSON.stringify(questions));
+    localStorage.setItem('NOVUS_BACKUP_FORM_CONFIG', JSON.stringify(formConfig));
   } catch (e) {
     console.warn("Error al sincronizar respaldo LocalStorage:", e);
   }
 };
 
-// Restaurar desde LocalStorage si IndexedDB por alguna razón estuviera vacía
-export const restoreFromLocalStorageBackup = async () => {
+/**
+ * Función de Limpieza Atómica y Estandarización de Base de Datos.
+ * Borra cualquier pregunta previa y establece estrictamente las 3 preguntas oficiales y las 4 áreas de interés.
+ */
+export const sanitizeDatabaseFormConfigAndLeads = async () => {
   try {
-    const leadsBackup = localStorage.getItem('NOVUS_BACKUP_LEADS');
-    const questionsBackup = localStorage.getItem('NOVUS_BACKUP_QUESTIONS');
+    await db.transaction('rw', db.formConfig, db.questions, db.leads, async () => {
+      // 1. Reemplazar preguntas atómicamente por las 3 oficiales
+      await db.questions.clear();
+      await db.questions.bulkAdd(OFFICIAL_QUESTIONS);
 
-    const leadsCount = await db.leads.count();
-    if (leadsCount === 0 && leadsBackup) {
-      const parsedLeads = JSON.parse(leadsBackup);
-      if (Array.isArray(parsedLeads) && parsedLeads.length > 0) {
-        await db.leads.bulkAdd(parsedLeads);
-        console.log("Leads restaurados exitosamente desde el respaldo LocalStorage.");
-      }
-    }
+      // 2. Reemplazar configuración de formulario atómicamente por la oficial
+      await db.formConfig.clear();
+      await db.formConfig.bulkAdd(OFFICIAL_ACTIVE_FORM_CONFIG);
 
-    const questionsCount = await db.questions.count();
-    if (questionsCount === 0 && questionsBackup) {
-      const parsedQuestions = JSON.parse(questionsBackup);
-      if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
-        await db.questions.bulkAdd(parsedQuestions);
+      // 3. Normalizar datos de visitantes guardados
+      const allLeads = await db.leads.toArray();
+      for (const lead of allLeads) {
+        const rawData = lead.data || {};
+        const cleanData = {
+          'Nombre Completo': rawData['Nombre Completo'] || rawData['Nombre'] || lead.name || '-',
+          'Empresa': rawData['Empresa'] || '-',
+          'Correo Electrónico': rawData['Correo Electrónico'] || rawData['Email'] || lead.email || '-',
+          'País': rawData['País'] || '-',
+          'Interés Principal': rawData['Interés Principal'] || rawData['Interés'] || lead.interest || 'Nutrición Mineral',
+          'Privacidad': rawData['Privacidad'] !== undefined ? (rawData['Privacidad'] ? 'Aceptado' : 'No Aceptado') : 'Aceptado'
+        };
+
+        await db.leads.update(lead.id, {
+          data: cleanData
+        });
       }
-    }
-  } catch (e) {
-    console.warn("Error al restaurar respaldo:", e);
+    });
+
+    await syncLocalStorageBackup();
+    console.log("Base de datos actualizada con las 3 preguntas oficiales y 4 áreas de interés.");
+    return true;
+  } catch (err) {
+    console.error("Error en la transacción atómica de sanitización:", err);
+    return false;
   }
 };
 
-// Inicialización completa de la base de datos
 export const initDB = async () => {
   try {
-    // 1. Garantizar persistencia en el navegador
     await requestPersistentStorage();
-
-    // 2. Intentar restaurar respaldo secundario si la DB fue reseteada
-    await restoreFromLocalStorageBackup();
-
-    // 3. Semilla de preguntas iniciales si está vacía
-    const count = await db.questions.count();
-    if (count === 0) {
-      await db.questions.bulkAdd(INITIAL_QUESTIONS);
-      console.log("Preguntas iniciales creadas en IndexedDB.");
-    }
-
-    // 4. Actualizar espejo de respaldo
-    await syncLocalStorageBackup();
+    await sanitizeDatabaseFormConfigAndLeads();
   } catch (err) {
-    console.error("Error inicializando IndexedDB:", err);
+    console.error("Error al inicializar IndexedDB:", err);
   }
 };
 
 export const resetQuestionsToDefault = async () => {
   await db.questions.clear();
-  await db.questions.bulkAdd(INITIAL_QUESTIONS);
+  await db.questions.bulkAdd(OFFICIAL_QUESTIONS);
   await syncLocalStorageBackup();
+};
+
+export const resetFormConfigToDefault = async () => {
+  await sanitizeDatabaseFormConfigAndLeads();
 };

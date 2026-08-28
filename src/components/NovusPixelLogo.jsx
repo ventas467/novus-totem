@@ -1,42 +1,22 @@
 import React from 'react';
 
-const RAW_PIXEL_ROWS = [
-  "████          ██████            ████████            ██████            ████      ██████          ████            ████████        ",
-  "██████        ██████          ████████    ████      ██████          ██████      ██████          ████        ████████████████████",
-  "████████      ██████        ████████████    ████    ██████          ██████      ██████          ████      ██████████  ████      ",
-  "██████████    ██████      ████████████  ████  ██      ██████      ██████        ██████          ████      ██████                ",
-  "██████████    ██████      ████████        ████████    ██████      ██████        ██████          ████      ████████              ",
-  "████████████  ██████      ████████        ████  ██      ██████    ██████        ██████          ████      ████████████████      ",
-  "██████  ████████████      ████████        ████  ██      ██████  ██████          ██████          ████          ██████████████    ",
-  "██████  ████████████      ████████      ██████████      ██████████████          ██████        ██████                ████████    ",
-  "██████    ██████████      ██████████████████  ████        ██████████            ████████      ██████                  ██████    ",
-  "██████      ████████        ██████████████  ████          ██████████              ██████████████████      ████████  ████████    ",
-  "██████        ██████        ██████████████████              ██████                ████████████████        ████████████████      ",
-  "██████          ████            ████████████                ██████                    ████████                ██████████        "
-];
-
-export default function NovusPixelLogo({ color = "#FFFFFF", scale = 1 }) {
-  // Convertir las 12 filas de caracteres en rectángulos SVG exactos 8-bits
-  const rects = [];
-  RAW_PIXEL_ROWS.forEach((rowStr, y) => {
-    for (let x = 0; x < rowStr.length; x++) {
-      if (rowStr[x] === '█') {
-        rects.push(
-          <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={color} />
-        );
-      }
-    }
-  });
-
+export default function NovusPixelLogo({ className = '', showTagline = false }) {
   return (
-    <div className="w-full flex items-center justify-center p-2">
-      <svg
-        viewBox="0 0 144 12"
-        className="w-full h-auto max-w-4xl drop-shadow-[0_6px_0_#1C5274]"
-        style={{ shapeRendering: 'crispEdges', imageRendering: 'pixelated' }}
-      >
-        {rects}
-      </svg>
+    <div className={`flex flex-col items-center justify-center p-2 select-none ${className}`}>
+      {/* LOGO VECTORIAL OFICIAL DE NOVUS (PUBLIC/NOVUSLOGOVECTOR.SVG) */}
+      <img
+        src="/novuslogovector.svg"
+        alt="NOVUS International Logo Oficial"
+        className="h-16 md:h-24 w-auto max-w-lg object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] transition-transform duration-300 hover:scale-105"
+      />
+
+      {showTagline && (
+        <div className="mt-3 text-center">
+          <p className="text-yellow-400 font-pixel text-[10px] md:text-xs tracking-widest uppercase drop-shadow-[0_2px_0_#000]">
+            SOLUCIONES PARA SALUD Y PRODUCCIÓN AVÍCOLA
+          </p>
+        </div>
+      )}
     </div>
   );
 }

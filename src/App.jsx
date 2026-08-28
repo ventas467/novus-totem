@@ -11,32 +11,28 @@ import SecretAdminModal from './components/SecretAdminModal';
 export default function App() {
   // Vistas: 'welcome' | 'form' | 'game' | 'end' | 'admin'
   const [view, setView] = useState('welcome');
-  const [currentLead, setCurrentLead] = useState(null);
+  const [currentLeadData, setCurrentLeadData] = useState(null);
   const [currentLeadId, setCurrentLeadId] = useState(null);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(3);
   const [showAdminModal, setShowAdminModal] = useState(false);
 
-  // Inicializar base de datos IndexedDB y respaldos al arrancar la app
   useEffect(() => {
     initDB();
   }, []);
 
-  // Iniciar Flujo
   const handleStart = () => {
     setView('form');
   };
 
-  // Guardar datos del Formulario INMEDIATAMENTE en IndexedDB y respaldar
-  const handleFormSubmit = async (leadData) => {
-    setCurrentLead(leadData);
+  // Guardar datos del Formulario Dinámico inmediatamente
+  const handleFormSubmit = async (formData) => {
+    setCurrentLeadData(formData);
     
     try {
-      // Guardar el registro inmediatamente en IndexedDB (aún sin puntaje final)
+      // Se guarda como objeto dinámico en la propiedad `data`
       const newId = await db.leads.add({
-        name: leadData.name,
-        email: leadData.email,
-        interest: leadData.interest,
+        data: formData,
         score: 0,
         totalQuestions: 3,
         date: new Date().toISOString()
@@ -45,7 +41,7 @@ export default function App() {
       setCurrentLeadId(newId);
       await syncLocalStorageBackup();
     } catch (err) {
-      console.error("Error guardando registro inicial en IndexedDB:", err);
+      console.error("Error guardando lead en IndexedDB:", err);
     }
 
     setView('game');
@@ -58,24 +54,19 @@ export default function App() {
 
     try {
       if (currentLeadId) {
-        // Actualizar el registro existente con el puntaje obtenido
         await db.leads.update(currentLeadId, {
           score: finalScore,
           totalQuestions: numQuestions
         });
-      } else if (currentLead) {
-        // Fallback si no había ID previo
+      } else if (currentLeadData) {
         await db.leads.add({
-          name: currentLead.name,
-          email: currentLead.email,
-          interest: currentLead.interest,
+          data: currentLeadData,
           score: finalScore,
           totalQuestions: numQuestions,
           date: new Date().toISOString()
         });
       }
 
-      // Sincronizar espejo de seguridad en LocalStorage
       await syncLocalStorageBackup();
     } catch (err) {
       console.error("Error actualizando puntaje en IndexedDB:", err);
@@ -84,9 +75,9 @@ export default function App() {
     setView('end');
   };
 
-  // Reset de interfaz para el Siguiente Jugador (NO borra la base de datos)
+  // Reset para el siguiente jugador
   const handleFullReset = () => {
-    setCurrentLead(null);
+    setCurrentLeadData(null);
     setCurrentLeadId(null);
     setScore(0);
     setView('welcome');
@@ -99,6 +90,12 @@ export default function App() {
   const handleAdminSuccess = () => {
     setShowAdminModal(false);
     setView('admin');
+  };
+
+  // Extraer el nombre del usuario para mensajes de bienvenida/puntaje
+  const getPlayerName = () => {
+    if (!currentLeadData) return 'Visitante';
+    return currentLeadData["Nombre Completo"] || currentLeadData["Nombre"] || Object.values(currentLeadData)[0] || 'Visitante';
   };
 
   return (
@@ -123,7 +120,7 @@ export default function App() {
         {view === 'game' && (
           <Game
             key="game"
-            currentLead={currentLead}
+            currentLead={{ name: getPlayerName() }}
             onEnd={handleGameEnd}
           />
         )}
@@ -133,7 +130,7 @@ export default function App() {
             key="end"
             score={score}
             totalQuestions={totalQuestions}
-            currentLead={currentLead}
+            currentLead={{ name: getPlayerName() }}
             onReset={handleFullReset}
           />
         )}
@@ -146,7 +143,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Modal de PIN para Administrador */}
+      {/* Modal PIN de Seguridad */}
       {showAdminModal && (
         <SecretAdminModal
           onSuccess={handleAdminSuccess}

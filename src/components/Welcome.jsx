@@ -46,18 +46,18 @@ export default function Welcome({ onStart, onOpenAdmin }) {
         <span>{muted ? 'MUTED' : 'AUDIO ON'}</span>
       </button>
 
-      {/* Header & Logo Pixel Art Exacto de NOVUS */}
-      <div className="flex flex-col items-center space-y-3 mt-4 text-center z-10 w-full max-w-2xl">
+      {/* HEADER & LOGO CORPORATIVO ORIGINAL NOVUS (SOBRE LA CAPA SCANLINES Z-100 PARA CERO LÍNEAS HORIZONTALES) */}
+      <div className="flex flex-col items-center space-y-3 mt-4 text-center z-[100] relative w-full max-w-xl">
         <motion.div
           animate={{ y: [-3, 3, -3] }}
           transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-          className="w-full bg-black/70 p-4 md:p-6 border-4 border-novus-gold shadow-pixel-lg rounded-md flex flex-col items-center"
+          className="w-full bg-[#1C5274] px-6 py-5 border-4 border-yellow-400 shadow-pixel-lg rounded-md flex flex-col items-center justify-center relative z-[100]"
         >
-          {/* Logo 8-Bit Pixel-Perfect de NOVUS */}
-          <NovusPixelLogo color="#FFFFFF" />
+          {/* Logo Blanco Transparente HD de NOVUS Idéntico a Imagen 1 */}
+          <NovusPixelLogo showTagline={false} />
 
           {/* Tagline Corporativo Novus */}
-          <div className="text-[10px] md:text-xs text-novus-gold tracking-widest mt-3 uppercase font-mono border-t-2 border-novus-light/40 pt-3 w-full text-center font-bold">
+          <div className="text-[10px] md:text-xs text-yellow-300 tracking-widest mt-3 uppercase font-pixel border-t-2 border-novus-light/60 pt-2.5 w-full text-center font-bold drop-shadow-[0_1px_0_#000]">
             SOLUCIONES PARA SALUD Y PRODUCCIÓN AVÍCOLA
           </div>
         </motion.div>
