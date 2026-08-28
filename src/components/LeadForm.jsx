@@ -58,8 +58,10 @@ export default function LeadForm({ onSubmit, onBack }) {
     if (type === 'text' || type === 'email' || type === 'number') {
       setActiveField(label);
       setTimeout(() => {
-        fieldRefs.current[label]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
+        if (fieldRefs.current[label]) {
+          fieldRefs.current[label].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
       playSound('jump');
     } else {
       setActiveField(null);
@@ -104,146 +106,180 @@ export default function LeadForm({ onSubmit, onBack }) {
     );
   }
 
+  // Separar campos de texto (Columna Izquierda) y campos de selección / legal (Columna Derecha)
+  const textFields = fields.filter(f => f.type === 'text' || f.type === 'email' || f.type === 'number');
+  const selectField = fields.find(f => f.type === 'select');
+  const legalField = fields.find(f => f.type === 'legal');
+
   return (
-    <div className="flex flex-col h-full bg-[#0F3249] text-white font-pixel select-none overflow-hidden scanlines">
-      {/* HEADER CABECERA DE ALTO CONTRASTE */}
-      <div className="p-4 md:p-5 border-b-4 border-yellow-400 bg-black/80 shadow-xl z-20 flex justify-between items-center">
+    <div className="flex flex-col h-full w-full bg-[#0F3249] text-white font-pixel select-none overflow-hidden scanlines">
+      {/* HEADER PANORÁMICO HORIZONTAL 16:9 */}
+      <div className="px-6 py-4 border-b-4 border-yellow-400 bg-black/90 shadow-2xl z-30 flex justify-between items-center flex-shrink-0">
         {onBack && (
           <button
             onClick={() => { playSound('click'); onBack(); }}
-            className="flex items-center gap-2 bg-[#1C5274] border-2 border-white text-white px-3 py-1.5 text-[10px] rounded hover:bg-slate-800 active:scale-95 shadow-pixel font-pixel font-bold"
+            className="flex items-center gap-2 bg-[#1C5274] border-2 border-white text-white px-4 py-2 text-xs rounded hover:bg-slate-800 active:scale-95 shadow-pixel font-pixel font-bold"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> VOLVER
+            <ArrowLeft className="w-4 h-4" /> VOLVER
           </button>
         )}
-        <h2 className="text-base md:text-xl text-yellow-400 font-black tracking-wider uppercase font-pixel drop-shadow-[0_2px_0_#000] mx-auto">
+        <h2 className="text-lg md:text-2xl text-yellow-400 font-black tracking-wider uppercase font-pixel drop-shadow-[0_2px_0_#000] mx-auto">
           REGISTRO DE VISITANTE
         </h2>
-        <div className="flex gap-1.5">
-          {[1, 2, 3].map(i => <div key={i} className="w-3.5 h-3.5 bg-red-600 animate-pulse border border-white shadow-pixel" />)}
+        <div className="flex gap-2">
+          {[1, 2, 3].map(i => <div key={i} className="w-4 h-4 bg-red-600 animate-pulse border border-white shadow-pixel" />)}
         </div>
       </div>
 
-      {/* CUERPO SCROLLEABLE CON CAMPOS Y OPCIONES ACTUALIZADAS */}
+      {/* CONTENEDOR EN 2 COLUMNAS PANORÁMICAS HORIZONTALES PARA PANTALLAS STEREN / 16:9 */}
       <div
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto p-4 md:p-6 space-y-6 transition-all ${
-          activeField ? 'pb-[50vh]' : 'pb-12'
-        }`}
+        style={{
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain'
+        }}
+        className="flex-1 overflow-y-auto px-4 py-4 md:px-10 md:py-6 custom-scrollbar relative z-10"
       >
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
-          {fields.map(f => {
-            const isActive = activeField === f.label;
-            const val = formData[f.label] || '';
-
-            return (
-              <div key={f.id || f.label} ref={el => fieldRefs.current[f.label] = el} className="flex flex-col space-y-2">
-                {f.type !== 'legal' && (
-                  <label className={`text-xs md:text-sm font-extrabold uppercase font-mono tracking-wider transition-colors ${
-                    isActive ? 'text-yellow-400 drop-shadow-[0_1px_0_#000]' : 'text-white'
-                  }`}>
-                    {f.label} {f.required && "*"}
-                  </label>
-                )}
-
-                {f.type === 'text' || f.type === 'email' || f.type === 'number' ? (
-                  <div
-                    onClick={() => handleFocus(f.label, f.type)}
-                    className={`p-4 font-mono text-base md:text-lg border-4 min-h-[60px] flex items-center justify-between cursor-pointer transition-all shadow-pixel ${
-                      isActive
-                        ? 'bg-black text-white border-yellow-400 ring-4 ring-yellow-400/40 font-bold shadow-pixel-gold'
-                        : 'bg-[#0B2233] text-white border-[#2A7BA0] hover:border-white'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1 overflow-hidden w-full">
-                      <span className={isActive ? 'text-yellow-300 font-extrabold text-base md:text-xl truncate drop-shadow-[0_1px_0_#000]' : 'text-white font-bold text-base md:text-lg truncate'}>
-                        {val || <span className="text-slate-400 font-normal text-xs md:text-sm italic">Toca para escribir...</span>}
-                      </span>
-                      {isActive && <span className="animate-pulse text-yellow-400 font-black text-2xl ml-1">_</span>}
-                    </div>
-                    <Keyboard className={`w-6 h-6 flex-shrink-0 ml-2 ${isActive ? 'text-yellow-400 animate-bounce' : 'text-slate-400'}`} />
-                  </div>
-                ) : f.type === 'select' ? (
-                  <div className="grid grid-cols-1 gap-2">
-                    {(f.options || '').split(',').map(o => o.trim()).filter(Boolean).map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, [f.label]: opt });
-                          setActiveField(null);
-                          playSound('jump');
-                        }}
-                        className={`p-3.5 text-left border-4 text-xs md:text-sm font-mono font-bold transition-all flex items-center justify-between shadow-pixel ${
-                          val === opt
-                            ? 'bg-yellow-400 text-black border-white shadow-pixel-gold scale-[1.01]'
-                            : 'bg-[#0B2233] text-white border-[#2A7BA0] hover:border-white'
-                        }`}
-                      >
-                        <span className="truncate">{opt}</span>
-                        {val === opt && <Check className="w-5 h-5 text-black font-black" />}
-                      </button>
-                    ))}
-                  </div>
-                ) : f.type === 'legal' ? (
-                  /* AVISO DE PRIVACIDAD EN MÁXIMO CONTRASTE */
-                  <div className="bg-black/90 border-4 border-yellow-400 p-4 rounded-sm space-y-3 shadow-pixel-lg">
-                    <div className="flex items-center gap-2 text-yellow-400 font-black text-xs md:text-sm border-b border-slate-700 pb-2">
-                      <ShieldCheck className="w-5 h-5 text-yellow-400" />
-                      <span>[ AVISO LEGAL Y PRIVACIDAD ]</span>
-                    </div>
-
-                    <div className="h-24 overflow-y-auto text-xs leading-relaxed text-white font-mono bg-slate-900 p-3 border border-slate-700 custom-scrollbar">
-                      <p className="text-yellow-400 font-bold mb-1">TRATAMIENTO DE DATOS PERSONALES:</p>
-                      NOVUS INTERNATIONAL INC. utilizará sus datos para fines comerciales, nutrición animal y salud avícola.
-                      Al marcar la casilla, acepta nuestra política de tratamiento de datos personales (Habeas Data).
-                    </div>
-
-                    <label
-                      onClick={() => {
-                        playSound('jump');
-                        setFormData({ ...formData, [f.label]: !formData[f.label] });
-                        setActiveField(null);
-                      }}
-                      className="flex items-center gap-3 cursor-pointer group select-none pt-1"
-                    >
-                      <div
-                        className={`w-9 h-9 border-4 flex items-center justify-center text-lg font-black transition-all ${
-                          val
-                            ? 'bg-green-600 border-white text-white scale-105'
-                            : 'bg-slate-900 border-slate-500 text-transparent hover:border-white'
-                        }`}
-                      >
-                        {val && "✓"}
-                      </div>
-                      <span className="text-xs font-mono font-bold text-white group-hover:text-yellow-300">
-                        ACEPTO EL TRATAMIENTO DE DATOS.
-                      </span>
-                    </label>
-                  </div>
-                ) : null}
+        <form onSubmit={handleSubmit} className="w-full max-w-6xl mx-auto pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            
+            {/* COLUMNA IZQUIERDA: CAMPOS DE TEXTO E INFORMACIÓN PERSONAL */}
+            <div className="space-y-4 bg-black/40 p-4 md:p-6 border-4 border-[#2A7BA0] rounded-sm shadow-pixel-lg">
+              <div className="text-yellow-400 font-black text-xs md:text-sm border-b border-slate-700 pb-2 uppercase tracking-widest flex items-center gap-2">
+                <span>📝 DATOS PERSONALES</span>
               </div>
-            );
-          })}
 
-          {/* BOTÓN DE ACCIÓN */}
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className={`w-full p-5 border-b-8 font-pixel text-base md:text-lg uppercase tracking-wider shadow-2xl transition-all ${
-              canSubmit
-                ? 'bg-yellow-400 hover:bg-yellow-300 border-yellow-700 text-black font-black cursor-pointer active:border-b-0 active:translate-y-2 animate-pulse'
-                : 'bg-slate-800 border-slate-950 text-slate-400 font-bold opacity-50 cursor-not-allowed'
-            }`}
-          >
-            {canSubmit ? "¡INICIAR JUEGO!" : "RELLENA EL FORM"}
-          </button>
+              {textFields.map(f => {
+                const isActive = activeField === f.label;
+                const val = formData[f.label] || '';
+
+                return (
+                  <div key={f.id || f.label} ref={el => fieldRefs.current[f.label] = el} className="flex flex-col space-y-1.5">
+                    <label className={`text-xs font-extrabold uppercase font-mono tracking-wider transition-colors ${
+                      isActive ? 'text-yellow-400 drop-shadow-[0_1px_0_#000]' : 'text-white'
+                    }`}>
+                      {f.label} {f.required && "*"}
+                    </label>
+
+                    <div
+                      onClick={() => handleFocus(f.label, f.type)}
+                      className={`p-3.5 md:p-4 font-mono text-sm md:text-base border-4 min-h-[54px] flex items-center justify-between cursor-pointer transition-all shadow-pixel ${
+                        isActive
+                          ? 'bg-black text-white border-yellow-400 ring-4 ring-yellow-400/40 font-bold shadow-pixel-gold'
+                          : 'bg-[#0B2233] text-white border-[#2A7BA0] hover:border-white'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-1 overflow-hidden w-full">
+                        <span className={isActive ? 'text-yellow-300 font-extrabold text-sm md:text-lg truncate drop-shadow-[0_1px_0_#000]' : 'text-white font-bold text-sm md:text-base truncate'}>
+                          {val || <span className="text-slate-400 font-normal text-xs italic">Toca para escribir...</span>}
+                        </span>
+                        {isActive && <span className="animate-pulse text-yellow-400 font-black text-xl ml-1">_</span>}
+                      </div>
+                      <Keyboard className={`w-6 h-6 flex-shrink-0 ml-2 ${isActive ? 'text-yellow-400 animate-bounce' : 'text-slate-400'}`} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* COLUMNA DERECHA: INTERÉS PRINCIPAL, PRIVACIDAD Y BOTÓN INICIAR */}
+            <div className="space-y-4">
+              {/* SECCIÓN INTERÉS PRINCIPAL */}
+              {selectField && (
+                <div className="bg-black/40 p-4 md:p-5 border-4 border-[#2A7BA0] rounded-sm shadow-pixel-lg space-y-3">
+                  <label className="text-xs font-extrabold uppercase font-mono tracking-wider text-yellow-400 block border-b border-slate-700 pb-2">
+                    🎯 {selectField.label} *
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {(selectField.options || '').split(',').map(o => o.trim()).filter(Boolean).map(opt => {
+                      const val = formData[selectField.label] || '';
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, [selectField.label]: opt });
+                            setActiveField(null);
+                            playSound('jump');
+                          }}
+                          className={`p-3 text-left border-4 text-xs font-mono font-bold transition-all flex items-center justify-between shadow-pixel ${
+                            val === opt
+                              ? 'bg-yellow-400 text-black border-white shadow-pixel-gold scale-[1.01]'
+                              : 'bg-[#0B2233] text-white border-[#2A7BA0] hover:border-white'
+                          }`}
+                        >
+                          <span className="truncate leading-snug">{opt}</span>
+                          {val === opt && <Check className="w-5 h-5 text-black font-black flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* AVISO DE PRIVACIDAD HABEAS DATA */}
+              {legalField && (
+                <div className="bg-black/90 border-4 border-yellow-400 p-4 rounded-sm space-y-3 shadow-pixel-lg">
+                  <div className="flex items-center gap-2 text-yellow-400 font-black text-xs border-b border-slate-700 pb-1.5">
+                    <ShieldCheck className="w-5 h-5 text-yellow-400" />
+                    <span>[ AVISO LEGAL Y PRIVACIDAD ]</span>
+                  </div>
+
+                  <div
+                    style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+                    className="h-20 overflow-y-auto text-[11px] leading-relaxed text-white font-mono bg-slate-900 p-2.5 border border-slate-700 custom-scrollbar"
+                  >
+                    <p className="text-yellow-400 font-bold mb-0.5">TRATAMIENTO DE DATOS PERSONALES:</p>
+                    NOVUS INTERNATIONAL INC. utilizará sus datos para fines comerciales, nutrición animal y salud avícola.
+                    Al marcar la casilla, acepta nuestra política de tratamiento de datos personales (Habeas Data).
+                  </div>
+
+                  <label
+                    onClick={() => {
+                      playSound('jump');
+                      setFormData({ ...formData, [legalField.label]: !formData[legalField.label] });
+                      setActiveField(null);
+                    }}
+                    className="flex items-center gap-3 cursor-pointer group select-none pt-0.5"
+                  >
+                    <div
+                      className={`w-8 h-8 border-4 flex items-center justify-center text-lg font-black transition-all ${
+                        formData[legalField.label]
+                          ? 'bg-green-600 border-white text-white scale-105'
+                          : 'bg-slate-900 border-slate-500 text-transparent hover:border-white'
+                      }`}
+                    >
+                      {formData[legalField.label] && "✓"}
+                    </div>
+                    <span className="text-xs font-mono font-bold text-white group-hover:text-yellow-300">
+                      ACEPTO EL TRATAMIENTO DE DATOS.
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {/* BOTÓN DE ENVÍO */}
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className={`w-full p-4 md:p-5 border-b-8 font-pixel text-sm md:text-lg uppercase tracking-wider shadow-2xl transition-all ${
+                  canSubmit
+                    ? 'bg-yellow-400 hover:bg-yellow-300 border-yellow-700 text-black font-black cursor-pointer active:border-b-0 active:translate-y-2 animate-pulse'
+                    : 'bg-slate-800 border-slate-950 text-slate-400 font-bold opacity-50 cursor-not-allowed'
+                }`}
+              >
+                {canSubmit ? "¡INICIAR JUEGO!" : "RELLENA EL FORM"}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
 
-      {/* TECLADO VIRTUAL RETRO */}
+      {/* TECLADO VIRTUAL RETRO HORIZONTAL EN PANTALLA DIVIDIDA */}
       {activeField && (
-        <div className="bg-slate-950 border-t-4 border-yellow-400 animate-slide-up z-50">
+        <div className="bg-slate-950 border-t-4 border-yellow-400 animate-slide-up z-50 flex-shrink-0 max-h-[45vh] overflow-y-auto">
           <VirtualKeyboard
             onKeyPress={handleKeyPress}
             activeInputLabel={activeField}
