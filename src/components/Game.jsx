@@ -101,7 +101,7 @@ export default function Game({ onFinish }) {
   return (
     <div className="flex flex-col h-full bg-[#0F3249] text-white font-pixel select-none overflow-hidden scanlines">
       {/* HEADER DE ESTADO Y PUNTAJE DE ALTO CONTRASTE */}
-      <div className="px-5 py-3.5 bg-black border-b-4 border-yellow-400 shadow-xl flex justify-between items-center z-20 flex-shrink-0">
+      <div className="px-6 py-3.5 bg-black border-b-4 border-yellow-400 shadow-xl flex justify-between items-center z-20 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <span className="text-yellow-400 text-xs md:text-sm font-black tracking-wider">
             RETO {currentIndex + 1} DE {questions.length}
@@ -112,7 +112,7 @@ export default function Game({ onFinish }) {
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5 bg-yellow-400 text-black px-3 py-1 text-xs md:text-sm font-black border-2 border-white shadow-pixel">
+          <div className="flex items-center space-x-1.5 bg-yellow-400 text-black px-3.5 py-1 text-xs md:text-sm font-black border-2 border-white shadow-pixel">
             <Award className="w-4 h-4 text-black" />
             <span>PUNTAJE: {score * 100} PTS</span>
           </div>
@@ -127,8 +127,8 @@ export default function Game({ onFinish }) {
         />
       </div>
 
-      {/* PISTA DE OBSTÁCULOS 8-BITS ORIGINAL VISTOSA (POLLO Y OBSTÁCULOS AMPLIOS) */}
-      <div className="relative w-full h-36 md:h-44 bg-gradient-to-b from-sky-700 via-sky-800 to-emerald-800 border-b-4 border-emerald-950 overflow-hidden flex-shrink-0">
+      {/* PISTA DE OBSTÁCULOS 8-BITS (MANTENIDA EN SU PROPORCIÓN VISTOSA ORIGINAL) */}
+      <div className="relative w-full h-32 md:h-40 bg-gradient-to-b from-sky-700 via-sky-800 to-emerald-800 border-b-4 border-emerald-950 overflow-hidden flex-shrink-0">
         {/* Sol Retro */}
         <div className="absolute top-2 right-8 w-9 h-9 bg-yellow-300 rounded-full border-2 border-orange-500 shadow-pixel opacity-90" />
         
@@ -158,7 +158,7 @@ export default function Game({ onFinish }) {
           <span className="text-[8px] bg-yellow-400 text-black font-black px-1 border border-black">META NOVUS</span>
         </div>
 
-        {/* POLLO CON SALTO PARABÓLICO EN TAMAÑO COMPLETO */}
+        {/* POLLO CON SALTO PARABÓLICO */}
         <div
           className="absolute bottom-5 transition-all duration-500 ease-out"
           style={{
@@ -175,11 +175,11 @@ export default function Game({ onFinish }) {
         </div>
       </div>
 
-      {/* ÁREA PRINCIPAL: TARJETA DE PREGUNTA Y OPCIONES AMPLIADAS CON BALANCE VISUAL */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-5 flex flex-col justify-between max-w-5xl mx-auto w-full space-y-3 custom-scrollbar">
-        {/* TARJETA DE PREGUNTA EN ALTO CONTRASTE */}
-        <div className="bg-black/95 p-4 md:p-5 border-4 border-yellow-400 shadow-pixel-lg rounded-sm text-center relative z-10 flex-shrink-0">
-          <h3 className="text-xs md:text-base leading-relaxed text-yellow-300 font-mono font-black tracking-wide drop-shadow-[0_1px_0_#000]">
+      {/* ÁREA PRINCIPAL OPTIMIZADA: TARJETA DE PREGUNTA Y OPCIONES AMPLIADAS AL 100% DEL ANCHO */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 md:px-8 md:py-4 flex flex-col justify-start max-w-6xl mx-auto w-full space-y-3 custom-scrollbar">
+        {/* TARJETA DE PREGUNTA CON PADDING PROPORCIONAL Y TIPOGRAFÍA GRANDE */}
+        <div className="bg-black/95 px-5 py-3.5 md:px-6 md:py-4 border-4 border-yellow-400 shadow-pixel-lg rounded-sm text-center relative z-10 flex-shrink-0 w-full">
+          <h3 className="text-sm md:text-xl leading-relaxed text-yellow-300 font-mono font-black tracking-wide drop-shadow-[0_1px_0_#000]">
             {currentQ.text}
           </h3>
         </div>
@@ -193,8 +193,8 @@ export default function Game({ onFinish }) {
           </div>
         )}
 
-        {/* GRILLA DE OPCIONES DE RESPUESTA */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
+        {/* GRILLA DE OPCIONES DE RESPUESTA EN 2 COLUMNAS OPTIMIZADAS (PADDING PROPORCIONAL Y BADGES A/B/C/D DESTACADOS) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
           {currentQ.options.map((opt, idx) => {
             let btnStyle = "bg-[#061522] text-white border-[#2A7BA0] hover:border-yellow-400";
 
@@ -213,20 +213,21 @@ export default function Game({ onFinish }) {
                 key={idx}
                 disabled={isAnswered}
                 onClick={() => handleSelectOption(idx)}
-                className={`p-3.5 md:p-4 text-left border-4 font-mono text-xs md:text-sm font-black transition-all flex items-center justify-between shadow-pixel active:scale-95 min-h-[58px] md:min-h-[66px] ${btnStyle}`}
+                className={`px-4 py-3 md:px-5 md:py-3.5 text-left border-4 font-mono text-xs md:text-base font-black transition-all flex items-center justify-between shadow-pixel active:scale-95 min-h-[58px] md:min-h-[66px] w-full ${btnStyle}`}
               >
-                <div className="flex items-center space-x-3 w-full">
-                  <span className="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-black border-2 border-yellow-400 text-yellow-400 font-pixel text-xs font-black">
+                <div className="flex items-center space-x-3.5 w-full">
+                  {/* BADGE DESTACADO CON MÁXIMO CONTRASTE Y TAMAÑO RÁPIDO A/B/C/D */}
+                  <span className="w-9 h-9 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center bg-yellow-400 text-black border-2 border-white font-pixel text-sm md:text-base font-black shadow-pixel">
                     {String.fromCharCode(65 + idx)}
                   </span>
-                  <span className="leading-snug">{opt}</span>
+                  <span className="leading-snug flex-1">{opt}</span>
                 </div>
 
                 {isAnswered && idx === currentQ.correct && (
-                  <Check className="w-6 h-6 text-white font-black ml-2 flex-shrink-0" />
+                  <Check className="w-7 h-7 text-white font-black ml-2 flex-shrink-0" />
                 )}
                 {isAnswered && selectedOption === idx && idx !== currentQ.correct && (
-                  <X className="w-6 h-6 text-white font-black ml-2 flex-shrink-0" />
+                  <X className="w-7 h-7 text-white font-black ml-2 flex-shrink-0" />
                 )}
               </button>
             );
