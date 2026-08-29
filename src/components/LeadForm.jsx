@@ -261,7 +261,7 @@ export default function LeadForm({ onSubmit, onBack }) {
                 </div>
               )}
 
-              {/* BOTÓN PRINCIPAL DE ACCIÓN (CAMBIADO A JUGAR / ¡JUGAR!) */}
+              {/* BOTÓN PRINCIPAL DE ACCIÓN */}
               <button
                 type="submit"
                 disabled={!canSubmit}
@@ -278,13 +278,14 @@ export default function LeadForm({ onSubmit, onBack }) {
         </form>
       </div>
 
-      {/* TECLADO VIRTUAL RETRO HORIZONTAL CON ALTO CONTRASTE */}
+      {/* TECLADO VIRTUAL RETRO HORIZONTAL CON BOTÓN DE OCULTAR */}
       {activeField && (
         <div className="bg-slate-950 border-t-4 border-yellow-400 animate-slide-up z-50 flex-shrink-0 max-h-[45vh] overflow-y-auto shadow-pixel-lg">
           <VirtualKeyboard
             onKeyPress={handleKeyPress}
             activeInputLabel={activeField}
             currentValue={formData[activeField] || ''}
+            onClose={() => setActiveField(null)}
           />
         </div>
       )}

@@ -55,9 +55,9 @@ export default function SecretAdminModal({ onSuccess, onClose }) {
         </div>
 
         <div>
-          <p className="text-[10px] text-slate-200 mb-4">INGRESA EL CÓDIGO DE ACCESO DEL STAND (PIN DEFAULT: 1234)</p>
+          <p className="text-xs text-slate-200 mb-4 uppercase font-bold">INGRESA EL CÓDIGO DE ACCESO</p>
           
-          {/* Indicador PIN (4 Cajas) */}
+          {/* Indicador PIN Enmascarado (4 Cajas) */}
           <div className="flex justify-center gap-3 my-2">
             {[0, 1, 2, 3].map((i) => (
               <div
@@ -66,11 +66,11 @@ export default function SecretAdminModal({ onSuccess, onClose }) {
                   error
                     ? 'border-red-500 bg-red-950 text-red-400 animate-shake'
                     : pin.length > i
-                    ? 'border-novus-gold bg-black text-novus-gold'
+                    ? 'border-yellow-400 bg-black text-yellow-400'
                     : 'border-slate-600 bg-novus-dark text-slate-500'
                 }`}
               >
-                {pin.length > i ? '★' : ''}
+                {pin.length > i ? '●' : ''}
               </div>
             ))}
           </div>

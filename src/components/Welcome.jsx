@@ -91,9 +91,9 @@ export default function Welcome({ onStart, onOpenAdmin }) {
         </div>
       </div>
 
-      {/* Footer corporativo */}
-      <div className="text-[9px] text-slate-400 z-10 text-center tracking-widest">
-        NOVUS INTERNATIONAL © 2026 • TÓTEM TÁCTIL FÍSICO
+      {/* Footer corporativo (Actualizado a PUNTO DE ACTIVACIÓN DIGITAL) */}
+      <div className="text-[9px] text-slate-300 z-10 text-center tracking-widest font-mono font-bold">
+        NOVUS INTERNATIONAL © 2026 • PUNTO DE ACTIVACIÓN DIGITAL
       </div>
     </div>
   );
