@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import PixelChicken from './PixelChicken';
 import { playSound } from '../utils/audio';
-import { Trophy, RotateCcw, HeartHandshake, Sparkles } from 'lucide-react';
+import { Trophy, RotateCcw, HeartHandshake } from 'lucide-react';
 
 export default function EndScreen({ score, totalQuestions = 3, currentLead, onReset }) {
   const [countdown, setCountdown] = useState(10);
@@ -88,10 +88,10 @@ export default function EndScreen({ score, totalQuestions = 3, currentLead, onRe
           </div>
         </div>
 
-        {/* Mensaje Informativo NOVUS */}
-        <div className="text-xs text-slate-300 leading-relaxed bg-novus-dark/80 p-4 border border-novus-light">
-          <HeartHandshake className="w-5 h-5 text-novus-gold mx-auto mb-2" />
-          Acércate a nuestro equipo en el stand para conocer más sobre nuestras soluciones en biquelados MINTREX® y salud intestinal.
+        {/* Mensaje Informativo NOVUS (Actualizado según Slide 4 del PPTX) */}
+        <div className="text-xs md:text-sm font-bold text-slate-100 leading-relaxed bg-black/90 p-4 border-2 border-yellow-400 shadow-pixel font-mono">
+          <HeartHandshake className="w-6 h-6 text-yellow-400 mx-auto mb-2 animate-bounce" />
+          Acércate al equipo NOVUS para conocer más sobre nuestras soluciones para avicultura.
         </div>
       </div>
 

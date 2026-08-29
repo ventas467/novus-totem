@@ -26,13 +26,13 @@ export const OFFICIAL_QUESTIONS = [
       "MINTREX® Oligoelementos Bis-Quelados",
       "AVIMATRIX® Aditivo Eubiótico",
       "CIBENZA® DP100 Aditivo Enzimático",
-      "NEXT ENHANCE® Solución para Piensos"
+      "NEXT ENHANCE® 150 Solución para Piensos"
     ],
     correct: 0,
     category: "Nutrición Mineral"
   },
   {
-    text: "¿Cuál es el principal beneficio de NEXT ENHANCE® Solución para Piensos en la nutrición de aves?",
+    text: "¿Cuál es el principal beneficio de NEXT ENHANCE® 150 Solución para Piensos en la nutrición de aves?",
     options: [
       "Mejorar la pigmentación de la piel y plumas",
       "Apoyar la salud intestinal promoviendo la mejora de la microbiota intestinal",
@@ -114,7 +114,7 @@ export const sanitizeDatabaseFormConfigAndLeads = async () => {
     });
 
     await syncLocalStorageBackup();
-    console.log("Base de datos actualizada con las 3 preguntas oficiales y 4 áreas de interés.");
+    console.log("Base de datos actualizada con NEXT ENHANCE® 150.");
     return true;
   } catch (err) {
     console.error("Error en la transacción atómica de sanitización:", err);
