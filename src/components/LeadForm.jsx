@@ -220,7 +220,7 @@ export default function LeadForm({ onSubmit, onBack }) {
                 </div>
               )}
 
-              {/* AVISO DE PRIVACIDAD HABEAS DATA EN MÁXIMA LEGIBILIDAD */}
+              {/* AVISO DE PRIVACIDAD HABEAS DATA */}
               {legalField && (
                 <div className="bg-black border-4 border-yellow-400 p-5 rounded-sm space-y-3 shadow-pixel-lg">
                   <div className="flex items-center gap-2 text-yellow-400 font-black text-xs md:text-sm border-b border-slate-700 pb-2 drop-shadow-[0_1px_0_#000]">
@@ -261,17 +261,17 @@ export default function LeadForm({ onSubmit, onBack }) {
                 </div>
               )}
 
-              {/* BOTÓN PRINCIPAL DE ACCIÓN */}
+              {/* BOTÓN PRINCIPAL DE ACCIÓN (CAMBIADO A JUGAR / ¡JUGAR!) */}
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className={`w-full p-4 md:p-5 border-4 font-pixel text-sm md:text-lg uppercase tracking-wider shadow-2xl transition-all ${
+                className={`w-full p-4 md:p-5 border-4 font-pixel text-base md:text-xl uppercase tracking-wider shadow-2xl transition-all ${
                   canSubmit
                     ? 'bg-yellow-400 hover:bg-yellow-300 border-white text-black font-black cursor-pointer active:scale-95 shadow-pixel-gold animate-pulse'
                     : 'bg-slate-900 border-[#2A7BA0] text-yellow-300/80 font-black opacity-80 cursor-not-allowed shadow-pixel'
                 }`}
               >
-                {canSubmit ? "¡INICIAR JUEGO!" : "RELLENA EL FORM"}
+                {canSubmit ? "¡JUGAR!" : "JUGAR"}
               </button>
             </div>
           </div>

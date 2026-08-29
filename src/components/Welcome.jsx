@@ -51,7 +51,7 @@ export default function Welcome({ onStart, onOpenAdmin }) {
           </div>
         </div>
 
-        {/* Marquee Título del Juego (Actualizado según PPTX) */}
+        {/* Marquee Título del Juego */}
         <div className="bg-novus p-3.5 border-4 border-white shadow-pixel text-yellow-300 text-xs md:text-sm tracking-wider font-pixel uppercase drop-shadow-[0_1px_0_#000]">
           🎮 ELIGE A LA COMPAÑÍA DE NUTRICIÓN INTELIGENTE 🎮
         </div>
@@ -69,9 +69,10 @@ export default function Welcome({ onStart, onOpenAdmin }) {
           <PixelChicken state="celebrate" size="large" />
         </div>
 
-        {/* Banner Explicativo (Actualizado según PPTX) */}
-        <div className="mt-3 px-6 py-3 bg-black/90 border-2 border-yellow-400 text-center text-xs md:text-sm leading-relaxed text-slate-100 max-w-xl shadow-pixel font-mono font-extrabold">
-          Demuestra tus conocimientos en <span className="text-yellow-400 font-black">NUTRICIÓN INTELIGENTE</span>. ¡Compite para ser <span className="text-yellow-400 font-black">MADE OF MORE®</span>!
+        {/* Banner Explicativo en 2 Líneas Explícitas */}
+        <div className="mt-3 px-6 py-3.5 bg-black/90 border-2 border-yellow-400 text-center text-xs md:text-sm leading-relaxed text-slate-100 max-w-xl shadow-pixel font-mono font-extrabold flex flex-col space-y-1">
+          <div>Demuestra tus conocimientos en <span className="text-yellow-400 font-black">NUTRICIÓN INTELIGENTE</span>.</div>
+          <div>¡Compite para ser <span className="text-yellow-400 font-black">MADE OF MORE®</span>!</div>
         </div>
       </div>
 
