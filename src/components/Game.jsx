@@ -101,12 +101,12 @@ export default function Game({ onFinish }) {
   return (
     <div className="flex flex-col h-full bg-[#0F3249] text-white font-pixel select-none overflow-hidden scanlines">
       {/* HEADER DE ESTADO Y PUNTAJE DE ALTO CONTRASTE */}
-      <div className="px-5 py-3 bg-black border-b-4 border-yellow-400 shadow-xl flex justify-between items-center z-20 flex-shrink-0">
+      <div className="px-5 py-3.5 bg-black border-b-4 border-yellow-400 shadow-xl flex justify-between items-center z-20 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <span className="text-yellow-400 text-xs md:text-sm font-black tracking-wider">
             RETO {currentIndex + 1} DE {questions.length}
           </span>
-          <span className="bg-[#1C5274] border border-white px-2.5 py-0.5 text-[10px] md:text-xs text-white font-bold rounded shadow-pixel">
+          <span className="bg-[#1C5274] border border-white px-2.5 py-1 text-[10px] md:text-xs text-white font-bold rounded shadow-pixel">
             {currentQ.category || "AVÍCOLA"}
           </span>
         </div>
@@ -127,74 +127,74 @@ export default function Game({ onFinish }) {
         />
       </div>
 
-      {/* PISTA DE OBSTÁCULOS 8-BITS COMPACTA (LIBERA ESPACIO HACIA ABAJO) */}
-      <div className="relative w-full h-20 md:h-24 bg-gradient-to-b from-sky-700 via-sky-800 to-emerald-800 border-b-4 border-emerald-950 overflow-hidden flex-shrink-0">
+      {/* PISTA DE OBSTÁCULOS 8-BITS ORIGINAL VISTOSA (POLLO Y OBSTÁCULOS AMPLIOS) */}
+      <div className="relative w-full h-36 md:h-44 bg-gradient-to-b from-sky-700 via-sky-800 to-emerald-800 border-b-4 border-emerald-950 overflow-hidden flex-shrink-0">
         {/* Sol Retro */}
-        <div className="absolute top-1.5 right-6 w-7 h-7 bg-yellow-300 rounded-full border-2 border-orange-500 shadow-pixel opacity-90" />
+        <div className="absolute top-2 right-8 w-9 h-9 bg-yellow-300 rounded-full border-2 border-orange-500 shadow-pixel opacity-90" />
         
         {/* Suelo de Granja 8-Bit */}
-        <div className="absolute bottom-0 w-full h-4 bg-amber-900 border-t-2 border-emerald-600 flex justify-between items-center px-4">
+        <div className="absolute bottom-0 w-full h-5 bg-amber-900 border-t-4 border-emerald-600 flex justify-between items-center px-4">
           {[...Array(16)].map((_, i) => (
-            <div key={i} className="w-2 h-1.5 bg-emerald-500/50" />
+            <div key={i} className="w-2 h-2 bg-emerald-500/50" />
           ))}
         </div>
 
         {/* OBSTÁCULOS DE LA PISTA */}
         {/* Obstáculo 1: Valla de Granja */}
-        <div className="absolute bottom-4 left-[38%] flex flex-col items-center">
-          <div className="text-lg">🧱</div>
-          <span className="text-[7px] bg-black/80 text-yellow-300 px-1 border border-yellow-400">VALLA</span>
+        <div className="absolute bottom-5 left-[38%] flex flex-col items-center">
+          <div className="text-xl md:text-2xl">🧱</div>
+          <span className="text-[8px] bg-black/80 text-yellow-300 px-1 border border-yellow-400">VALLA</span>
         </div>
 
         {/* Obstáculo 2: Pajar Gigante */}
-        <div className="absolute bottom-4 left-[65%] flex flex-col items-center">
-          <div className="text-xl">🌽</div>
-          <span className="text-[7px] bg-black/80 text-yellow-300 px-1 border border-yellow-400">PAJAR</span>
+        <div className="absolute bottom-5 left-[65%] flex flex-col items-center">
+          <div className="text-2xl md:text-3xl">🌽</div>
+          <span className="text-[8px] bg-black/80 text-yellow-300 px-1 border border-yellow-400">PAJAR</span>
         </div>
 
         {/* Meta Novus */}
-        <div className="absolute bottom-4 left-[88%] flex flex-col items-center">
-          <div className="text-2xl animate-bounce">🏁🏆</div>
-          <span className="text-[7px] bg-yellow-400 text-black font-black px-1 border border-black">META NOVUS</span>
+        <div className="absolute bottom-5 left-[88%] flex flex-col items-center">
+          <div className="text-3xl md:text-4xl animate-bounce">🏁🏆</div>
+          <span className="text-[8px] bg-yellow-400 text-black font-black px-1 border border-black">META NOVUS</span>
         </div>
 
-        {/* POLLO CON SALTO PARABÓLICO */}
+        {/* POLLO CON SALTO PARABÓLICO EN TAMAÑO COMPLETO */}
         <div
-          className="absolute bottom-3 transition-all duration-500 ease-out"
+          className="absolute bottom-5 transition-all duration-500 ease-out"
           style={{
             left: chickenLeftPositions[trackPosition],
-            transform: jumpArc ? 'translate3d(0, -45px, 0)' : 'translate3d(0, 0, 0)'
+            transform: jumpArc ? 'translate3d(0, -65px, 0)' : 'translate3d(0, 0, 0)'
           }}
         >
-          <PixelChicken state={chickenState} size="small" />
+          <PixelChicken state={chickenState} size="medium" />
           {jumpArc && (
-            <div className="absolute -top-5 left-0 text-[10px] font-black text-yellow-300 animate-pulse">
+            <div className="absolute -top-6 left-0 text-xs font-black text-yellow-300 animate-pulse">
               ✨ ¡SALTO!
             </div>
           )}
         </div>
       </div>
 
-      {/* ÁREA PRINCIPAL EXPANDIDA: TARJETA DE PREGUNTA Y OPCIONES AMPLIADAS */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col justify-between max-w-5xl mx-auto w-full space-y-4">
-        {/* TARJETA DE PREGUNTA EN ALTO CONTRASTE Y TAMAÑO AMPLIADO */}
-        <div className="bg-black/95 p-5 md:p-6 border-4 border-yellow-400 shadow-pixel-lg rounded-sm text-center relative z-10 flex-shrink-0">
-          <h3 className="text-sm md:text-lg leading-relaxed text-yellow-300 font-mono font-black tracking-wide drop-shadow-[0_1px_0_#000]">
+      {/* ÁREA PRINCIPAL: TARJETA DE PREGUNTA Y OPCIONES AMPLIADAS CON BALANCE VISUAL */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-5 flex flex-col justify-between max-w-5xl mx-auto w-full space-y-3 custom-scrollbar">
+        {/* TARJETA DE PREGUNTA EN ALTO CONTRASTE */}
+        <div className="bg-black/95 p-4 md:p-5 border-4 border-yellow-400 shadow-pixel-lg rounded-sm text-center relative z-10 flex-shrink-0">
+          <h3 className="text-xs md:text-base leading-relaxed text-yellow-300 font-mono font-black tracking-wide drop-shadow-[0_1px_0_#000]">
             {currentQ.text}
           </h3>
         </div>
 
         {/* MENSAJE DE RETROALIMENTACIÓN */}
         {feedbackMessage && (
-          <div className={`p-3 text-center text-xs md:text-sm font-black border-4 shadow-pixel animate-slide-up ${
+          <div className={`p-2.5 text-center text-xs md:text-sm font-black border-4 shadow-pixel animate-slide-up ${
             feedbackMessage.type === 'success' ? 'bg-green-600 border-white text-white' : 'bg-red-600 border-white text-white'
           }`}>
             {feedbackMessage.text}
           </div>
         )}
 
-        {/* GRILLA DE OPCIONES DE RESPUESTA EXTENDIDAS VERTICALMENTE */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+        {/* GRILLA DE OPCIONES DE RESPUESTA */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
           {currentQ.options.map((opt, idx) => {
             let btnStyle = "bg-[#061522] text-white border-[#2A7BA0] hover:border-yellow-400";
 
@@ -213,29 +213,24 @@ export default function Game({ onFinish }) {
                 key={idx}
                 disabled={isAnswered}
                 onClick={() => handleSelectOption(idx)}
-                className={`p-4 md:p-5 text-left border-4 font-mono text-xs md:text-base font-black transition-all flex items-center justify-between shadow-pixel active:scale-95 min-h-[68px] md:min-h-[80px] ${btnStyle}`}
+                className={`p-3.5 md:p-4 text-left border-4 font-mono text-xs md:text-sm font-black transition-all flex items-center justify-between shadow-pixel active:scale-95 min-h-[58px] md:min-h-[66px] ${btnStyle}`}
               >
-                <div className="flex items-center space-x-3.5 w-full">
-                  <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-black border-2 border-yellow-400 text-yellow-400 font-pixel text-xs md:text-sm font-black">
+                <div className="flex items-center space-x-3 w-full">
+                  <span className="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-black border-2 border-yellow-400 text-yellow-400 font-pixel text-xs font-black">
                     {String.fromCharCode(65 + idx)}
                   </span>
                   <span className="leading-snug">{opt}</span>
                 </div>
 
                 {isAnswered && idx === currentQ.correct && (
-                  <Check className="w-7 h-7 text-white font-black ml-2 flex-shrink-0" />
+                  <Check className="w-6 h-6 text-white font-black ml-2 flex-shrink-0" />
                 )}
                 {isAnswered && selectedOption === idx && idx !== currentQ.correct && (
-                  <X className="w-7 h-7 text-white font-black ml-2 flex-shrink-0" />
+                  <X className="w-6 h-6 text-white font-black ml-2 flex-shrink-0" />
                 )}
               </button>
             );
           })}
-        </div>
-
-        {/* PIE DE INSTRUCCIÓN CORTA */}
-        <div className="text-[10px] text-yellow-400 text-center font-mono font-bold tracking-widest pt-1">
-          RESPONDE CORRECTAMENTE PARA QUE EL POLLO SALTE EL OBSTÁCULO Y LLEGUE A LA META NOVUS
         </div>
       </div>
     </div>
